@@ -38,6 +38,7 @@ SIZE = int(OUTPUT_SIZE/2 * OVERSAMPLE) // N_ROWS_COLS
 RATIO = args.ratio
 
 
+# generate an interpolated 1D value map
 def random1d(rng, n, k=2):
     # create a 2D array of random numbers
     x = np.linspace(0, 1, n)
@@ -56,21 +57,23 @@ def random1d(rng, n, k=2):
 
     return f
 
-def random2d(rng, n, m, k=2):
+# generate an interpolated 2D value map
+def random2d(rng, n, m, kx=2, ky=2):
     # create a 2D array of random numbers
     x = np.linspace(0, 1, n)
     y = np.linspace(0, 1, m+1)
-    z = rng.random((m,n))
+    #z = rng.random((m,n))
+    z = rng.normal(rng.random(), rng.random(), (m,n))
 
     # avoid invalid color values
     # based on lmfit, see: https://lmfit.github.io/lmfit-py/bounds.html
-    #z = (np.sin(z) + 1) * 0.5
+    z = (np.sin(z) + 1) * 0.5
 
     # make it periodic in y
     z = np.vstack([z, z[0,:]])
 
     # return an interpolation function
-    f = interpolate.RectBivariateSpline(x, y, z.T, kx=k, ky=k)
+    f = interpolate.RectBivariateSpline(x, y, z.T, kx=kx, ky=ky)
 
     if DEBUG:
         plt.title('n=%d m=%d seed=%d' % (n,m,seed))
@@ -135,7 +138,7 @@ def spiral(x, y, a=1.0, b=1.0, r_max=100, t_start=0):
     # return the minimum distance to the target point
     return (
         random_H(r_scale, k_scale),
-        0.2 + 0.6 * random_S(r_scale, 0) + 0.1 * random_S(0, t_scale) + 0.1 * random_S(0, k_scale),
+        0.4 + 0.4 * random_S(r_scale, 0) + 0.1 * random_S(0, t_scale) + 0.1 * random_S(0, k_scale),
         np.exp(random_V(np.sqrt(r_scale), 0)),
     )
 
@@ -155,10 +158,10 @@ if __name__ == '__main__':
         # initialize random generator
         rng = np.random.default_rng(seed)
 
-        random_R = random1d(rng, 23)
-        random_H = random2d(rng, 7, 2)
+        random_R = random1d(rng, 253)
+        random_H = random2d(rng, 13, 1, kx=4, ky=1)
         random_S = random2d(rng, 7, 137)
-        random_V = random2d(rng, 13, 23)
+        random_V = random2d(rng, 23, 23)
 
         r_max = 0.9 * SIZE
         t_start = rng.random() * 2*np.pi
